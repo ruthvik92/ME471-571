@@ -63,6 +63,7 @@ void main(int argc, char** argv)
 
     printf("Processor %d : The mean is  %.16f\n",my_rank,mean);        
 
+#if 0
     if (my_rank == 0)
     {
         double mean_true;
@@ -70,16 +71,20 @@ void main(int argc, char** argv)
         printf("Processor %d : True mean is %.16f\n",my_rank,mean_true);
     }
 
-    /* Fill in details for broadcasting to all processors, computing 
-    sums needed for STD, and then reducing results */
+    if (my_rank == 0)
+    {
+        printf("\n");
+        printf("Processor 0 : Broadcasting mean ...\n");
+    }
 
-#if 0
     source = 0;
     MPI_Bcast(&mean,1,MPI_DOUBLE,source,MPI_COMM_WORLD);
 
-    printf("The mean is %16.8f (from rank %d)\n",mean,my_rank);
-#endif    
+    printf("Processor %d : The mean is %.16f\n",my_rank,mean);
 
+    /* Fill in details for broadcasting to all processors, computing 
+    sums needed for STD, and then reducing results */
+#endif
 
     delete_array(&x);
 
