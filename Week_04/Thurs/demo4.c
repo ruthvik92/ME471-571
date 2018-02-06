@@ -61,14 +61,14 @@ void main(int argc, char** argv)
     MPI_Reduce(&s,&total_sum,1,MPI_DOUBLE,MPI_SUM,source,MPI_COMM_WORLD);    
     mean = total_sum/n_global;
 
-    printf("Processor %d : The mean is  %.16f\n",my_rank,mean);        
+    printf("Processor %2d : The mean is  %.16f\n",my_rank,mean);        
 
 #if 0
     if (my_rank == 0)
     {
         double mean_true;
         mean_true = sum_array(n_global,x)/n_global;
-        printf("Processor %d : True mean is %.16f\n",my_rank,mean_true);
+        printf("Processor %2d : True mean is %.16f\n",my_rank,mean_true);
     }
 
     if (my_rank == 0)
@@ -80,7 +80,7 @@ void main(int argc, char** argv)
     source = 0;
     MPI_Bcast(&mean,1,MPI_DOUBLE,source,MPI_COMM_WORLD);
 
-    printf("Processor %d : The mean is %.16f\n",my_rank,mean);
+    printf("Processor %2d : The mean is %.16f\n",my_rank,mean);
 
     /* Fill in details for broadcasting to all processors, computing 
     sums needed for STD, and then reducing results */
