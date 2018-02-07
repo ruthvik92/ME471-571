@@ -12,6 +12,8 @@ extern "C"
 #endif
 #endif
 
+void set_rank(int rank);
+
 double random_number();
 void random_seed();
 
@@ -24,6 +26,10 @@ int pow2(int p);
 
 
 void delete_array(double **x);
+
+void print_global(const char* format, ... );
+void print_debug(const char* format, ... );
+
 
 #ifdef __cplusplus
 #if 0

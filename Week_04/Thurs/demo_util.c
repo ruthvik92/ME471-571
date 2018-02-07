@@ -2,8 +2,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <math.h>
 #include <time.h>
+
+static int s_rank;
+
+void set_rank(int rank)
+{
+    s_rank = rank;
+}
 
 void sleep(double t_total)
 {
@@ -87,3 +95,27 @@ double sum_array(int n, double *x)
     return s;
 }
 
+/* Global print */
+
+void print_global(const char* format, ... )
+{
+    /* Only print if on processor 0 */
+    if (s_rank == 0)
+    {
+        va_list arglist;
+        printf( "Processor [0] : " );
+        va_start( arglist, format );
+        vprintf( format, arglist );
+        va_end( arglist );
+    }
+}
+
+void print_debug(const char* format, ... )
+{
+    /* Include rank number in print statement */
+    va_list arglist;
+    printf( "Processor [%d] : ",s_rank);
+    va_start( arglist, format );
+    vprintf( format, arglist );
+    va_end( arglist );
+}

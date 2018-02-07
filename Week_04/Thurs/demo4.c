@@ -1,7 +1,6 @@
 #include "demo4.h"
 #include "demo_util.h"
 
-#include <stdio.h>
 #include <mpi.h>
 
 void main(int argc, char** argv)
@@ -27,12 +26,15 @@ void main(int argc, char** argv)
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    set_rank(my_rank);  /* Needed to log printing */
+
+    /* Hardwire length of array */
     int n_global = pow2(10);
     int n_local = n_global/nprocs;
 
     if (my_rank == 0)
     {
-        random_array(n_global,&x);  /* Used for both sending and receiving */
+        random_array(n_global,&x);  
         int p;
         for(p = 1; p < nprocs; p++)
         {
@@ -48,46 +50,48 @@ void main(int argc, char** argv)
         MPI_Get_count(&status,MPI_DOUBLE,&count);
         if (count < n_local)
         {
-            printf("Something went wrong\n");
-            printf("n_local = %d\n",n_local);
-            printf("count = %d\n",count);
+            print_debug("Something went wrong\n");
+            print_debug("n_local = %d\n",n_local);
+            print_debug("count = %d\n",count);
             exit(0);
         }
     }
 
 
-    source = 0;
+    int root = 0;
     s = sum_array(n_local,x);   
-    MPI_Reduce(&s,&total_sum,1,MPI_DOUBLE,MPI_SUM,source,MPI_COMM_WORLD);    
+
+/* Use #def 1 to get other branch of pragma statement */
+#if 0
+    print_global("Using MPI_Reduce + MPI_Bcast\n");
+    MPI_Reduce(&s,&total_sum,1,MPI_DOUBLE,MPI_SUM,root,MPI_COMM_WORLD);    
     mean = total_sum/n_global;
 
-    printf("Processor %2d : The mean is  %.16f\n",my_rank,mean);        
+    print_debug("The mean is  %.16f\n",my_rank,mean);        
 
-#if 0
+    root = 0;
+    MPI_Bcast(&mean,1,MPI_DOUBLE,root,MPI_COMM_WORLD);
+
+    print_debug("The mean is %.16f\n",my_rank,mean);
+#else
+    print_global("Using MPI_Allreduce\n");
+    MPI_Allreduce(&s,&total_sum,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);    
+    mean = total_sum/n_global;
+
+    print_debug("The mean is  %.16f\n",my_rank,mean);        
+#endif
+
     if (my_rank == 0)
     {
         double mean_true;
         mean_true = sum_array(n_global,x)/n_global;
-        printf("Processor %2d : True mean is %.16f\n",my_rank,mean_true);
+        print_global("True mean is %.16f\n",my_rank,mean_true);
     }
-
-    if (my_rank == 0)
-    {
-        printf("\n");
-        printf("Processor 0 : Broadcasting mean ...\n");
-    }
-
-    source = 0;
-    MPI_Bcast(&mean,1,MPI_DOUBLE,source,MPI_COMM_WORLD);
-
-    printf("Processor %2d : The mean is %.16f\n",my_rank,mean);
 
     /* Fill in details for broadcasting to all processors, computing 
     sums needed for STD, and then reducing results */
-#endif
 
     delete_array(&x);
 
     MPI_Finalize();
-
 }
