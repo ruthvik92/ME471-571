@@ -37,6 +37,9 @@ void main(int argc, char** argv)
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+
+    print_global("Greetings from rank 0!!\n");
+
     if (nprocs < 2)
     {
         print_global("demo7 : Must have at least 2 processors.\n");
@@ -51,15 +54,60 @@ void main(int argc, char** argv)
 
         print_debug("n_global = %d\n",n_global);
 
-        /* Your Node P=0 work goes here */
+        /* Hardwire values */
+        double a,b;
+        a = 0;
+        b = 1;  
 
+        /* Your Node P=0 work goes here */
+        /* Send sub-interval to other processors */
+        double yp = 0;
+        double w = (b-a)/nprocs;
+
+        int p;
+        for(p = 1; p < nprocs; p++)
+        {
+            /* pass two values to processor p */
+            double range[2];
+            range[0] = p*w;
+            range[1] = range[0] + w;
+
+            int tag = 0;
+            int dest = p;
+            MPI_Send((void*) range,2,MPI_DOUBLE,dest,tag,MPI_COMM_WORLD);
+
+        }
     }
     else
     {
+        MPI_Status status;
+        int count;
+
         print_debug("Hello!\n");
-        
-        /* Your node P>0 goes here */
+
+        double range[2];
+
+        /* Receive range values */
+        int source = 0;
+        int tag = 0;
+        MPI_Recv((void*) range,2,MPI_DOUBLE,source,tag,MPI_COMM_WORLD,&status);   
+        MPI_Get_count(&status,MPI_DOUBLE,&count);         
+        print_debug("range is %f %f\n",range[0],range[1]);
+
     }
+
+    /* Broadcast value of N to all processors;  compute number of panels in each 
+    subinterval */
+
+    /* Every processor now knows its range and number of panels */
+
+    /* Apply trapezoidal rule (for loop) */
+
+    /* Call MPI_Reduce to get final integral */
+
+    /* Node 0 prints the results - print_global() */
+
+
 
     MPI_Finalize();
 
