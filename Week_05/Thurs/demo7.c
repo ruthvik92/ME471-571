@@ -25,25 +25,15 @@ double I_exact(double x)
 void main(int argc, char** argv)
 {
     /* Data arrays */
-    double *x;
-    double s, total_sum;
-    double mean;
     int n_global;
 
     /* MPI variables */
     int my_rank, nprocs;
-    int tag = 0;
-    int count;
-    int source;
-    MPI_Status status;
-
-    /* Other local variables */
-    int i, p;
 
     MPI_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    set_rank(my_rank);
+    set_rank(my_rank);  /* Used in printing */
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -59,11 +49,15 @@ void main(int argc, char** argv)
         read_int(argc,argv, "-p",&p0);
         n_global = pow2(p0);     /* Number of sub-intervals used for integration */
 
-        /* Your Node 0 work goes here */
+        print_debug("n_global = %d\n",n_global);
+
+        /* Your Node P=0 work goes here */
 
     }
     else
     {
+        print_debug("Hello!\n");
+        
         /* Your node P>0 goes here */
     }
 
