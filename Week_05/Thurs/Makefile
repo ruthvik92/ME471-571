@@ -1,7 +1,7 @@
 CC = mpicc
 
 SRC = ../../src
-INCLUDE_DIR = ../../src
+INCLUDE_DIR = -I../../src -I/usr/include
 
 objs = ${SRC}/demo_util.c
 
@@ -17,5 +17,5 @@ demo6_bug: demo6_bug.c ${objs}
 	${CC} -o mpi_demo6_bug  -I$(INCLUDE_DIR) demo6_bug.c ${objs}
 
 demo7: demo7.c ${objs}
-	${CC} -o mpi_demo7  -I$(INCLUDE_DIR) demo7.c ${objs}
+	${CC} -o mpi_demo7  $(INCLUDE_DIR) demo7.c ${objs} -lm
 
