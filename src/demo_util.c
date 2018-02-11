@@ -26,12 +26,11 @@ static int s_rank;
 
         delete_array(&x);  // clean up when you are done!
 
-    Other routine : 
-
-        ones_array      : create an array of ones
+    Array routine : 
+        empty_array     : Allocate memory, but don't assign any values.
+        ones_array      : Create an array of ones
         linspace_array  : Analogous to Matlab's 'linspace' 
         random_array    : Array of random numbers in [0,1]
-        sum_array       : Returns sum of entries of x
         delete_array    : Deletes memory for x
    ------------------------------------------------------------------ */ 
 
@@ -79,6 +78,13 @@ void delete_array(double **x)
 }
 
 
+/* --------------------------------------------------------------------
+    Operations on arrays
+
+    Routines : 
+        sum_array  : sum entries and return scalar.
+    ----------------------------------------------------------------- */
+
 double sum_array(int n, double *x)
 {
     int i;
@@ -98,6 +104,24 @@ double sum_array(int n, double *x)
     Read routines from the command line; 
     Print values either from node 0 only or from each processor. 
 
+        print_global  : Print only from node 0
+        print_debug   : print from each processor
+
+    Example : 
+
+        print_global("hello!\n");
+
+        returns : 
+        Processor [0] : hello!
+
+        print_debug("hello!\n");
+
+        returns : 
+        Processor [0] : hello!
+        Processor [1] : hello!
+        Processor [2] : hello!
+        Processor [3] : hello!
+        
     ------------------------------------------------------------------ */
 
 void read_int(int argc, char** argv, char arg[], int* value,int *err)
@@ -120,9 +144,6 @@ void read_int(int argc, char** argv, char arg[], int* value,int *err)
     }
 }
 
-
-
-/* Global print */
 
 void print_global(const char* format, ... )
 {
