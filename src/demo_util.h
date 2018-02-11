@@ -21,7 +21,7 @@ void empty_array(int n,double **x);
 void ones_array(int n,double **x);
 void random_array(int n, double **array);
 double sum_array(int n, double *x);
-
+void linspace_array(double a,double b,int n,double **x);
 int pow2(int p);
 
 void read_int(int argc, char** argv, char arg[], int* value);

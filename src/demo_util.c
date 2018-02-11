@@ -66,6 +66,17 @@ void ones_array(int n,double **x)
     }
 }
 
+void linspace_array(double a,double b,int n,double **x)
+{
+    double h = (b-a)/(n-1);
+    int i;
+    empty_array(n,x);
+    for(i = 0; i < n; i++)
+    {
+        (*x)[i] = a + i*h;
+    }
+}
+
 void random_array(int n, double **array)
 {
     *array = malloc(n*sizeof(double));    
