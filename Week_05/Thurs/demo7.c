@@ -48,11 +48,14 @@ void main(int argc, char** argv)
 
     if (my_rank == 0)
     {        
-        int p0;
-        read_int(argc,argv, "-p",&p0);
+        int p0,err;
+        read_int(argc,argv, "-p",&p0,&err);
+        if (err > 0)
+        {
+            print_global("Command line argument '-p' not found.\n");
+            exit(0);
+        }
         n_global = pow2(p0);     /* Number of sub-intervals used for integration */
-
-        print_debug("n_global = %d\n",n_global);
 
         /* Hardwire values */
         double a,b;
