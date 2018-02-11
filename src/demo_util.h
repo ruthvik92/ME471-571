@@ -24,7 +24,7 @@ double sum_array(int n, double *x);
 void linspace_array(double a,double b,int n,double **x);
 int pow2(int p);
 
-void read_int(int argc, char** argv, char arg[], int* value);
+void read_int(int argc, char** argv, char arg[], int* value, int *err);
 
 
 void delete_array(double **x);
