@@ -36,11 +36,14 @@ void main(int argc, char** argv)
 
     if (my_rank == 0)
     {        
-        int m;
-        read_int(argc,argv, "-m",&m);
-        n_global = pow2(m);
-
-        print_debug("m = %d; n = 2^m = %d\n",m,n_global);
+        int p0,err;
+        read_int(argc,argv, "-p",&p0,&err);
+        if (err > 0)
+        {
+            print_global("Command line argument '-p' not found.\n");
+            exit(0);
+        }
+        n_global = pow2(p0);
 
         random_array(n_global,&x);  /* global array */
 

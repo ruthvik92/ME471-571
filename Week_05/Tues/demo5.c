@@ -40,7 +40,13 @@ void main(int argc, char** argv)
     if (my_rank == 0)
     {
         int p0;
-        read_int(argc,argv, "-p",&p0);
+        int err;
+        read_int(argc,argv, "-p",&p0,&err);
+        if (err > 0)
+        {
+            print_global("Command line argument '-p' not found.\n");
+            exit(0);
+        }
         n_global = pow2(p0);
         
         random_array(n_global,&x);  /* Used for both sending and receiving */
