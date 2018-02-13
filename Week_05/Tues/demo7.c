@@ -1,5 +1,5 @@
 #include "demo7.h"
-#include "demo_util.h"
+#include <demo_util.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -32,8 +32,8 @@ void main(int argc, char** argv)
 
     if (my_rank == 0)
     {        
-        int p0;
-        read_int(argc,argv, "-p",&p0);
+        int p0, err;
+        read_int(argc,argv, "-p",&p0,&err);
         n_global = pow2(p0);
         printf("p0 = %d; n = %d\n",p0,n_global);
         
