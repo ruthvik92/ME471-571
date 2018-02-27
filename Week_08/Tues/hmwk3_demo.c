@@ -33,15 +33,23 @@ void main(int argc, char** argv)
     /* Data arrays */
     double a,b;
     int n_global;
-    double *x, *F, *B;
     double range[2];
+    double *x, *F, *B;
 
     /* Iterative variables */
     double tol;
-    int kmax,i,j,k;
+    int kmax;
+
+    /* Misc variables */
+    int i,j,k;
 
     /* MPI variables */
     int my_rank, nprocs;
+
+
+    /* ----------------------------------------------------------------
+       Set up MPI
+     ---------------------------------------------------------------- */
 
     MPI_Init(&argc, &argv);
 
@@ -51,6 +59,9 @@ void main(int argc, char** argv)
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    /* ----------------------------------------------------------------
+       Read parameters from the command line
+     ---------------------------------------------------------------- */
     if (my_rank == 0)
     {        
         int m,err,loglevel;
@@ -60,12 +71,14 @@ void main(int argc, char** argv)
             print_global("Command line argument '-m' not found\n");
             exit(0);
         }        
+
         read_int(argc,argv, "--kmax", &kmax, &err);
         if (err > 0)
         {
             print_global("Command line argument '--kmax' not found\n");
             exit(0);
         }
+        
         read_double(argc,argv, "--tol", &tol, &err);
         if (err > 0)
         {
@@ -73,7 +86,7 @@ void main(int argc, char** argv)
             exit(0);
         }
 
-        n_global = pow2(m);     /* Number of sub-intervals used for integration */
+        n_global = pow2(m);     
 
         /* Hardwire domain values values */
         a = 0;
@@ -91,6 +104,7 @@ void main(int argc, char** argv)
     /* ---------------------------------------------------------------
        Set up right hand side and any inhomogenous boundary conditions
     --------------------------------------------------------------- */
+    zeros_array(10,&B);  /* Change 10 to proper size */
 
     /* TODO : .... */
 
@@ -117,11 +131,7 @@ void main(int argc, char** argv)
        Clean up
     ---------------------------------------------------------------- */
     delete_array(&B);
-    delete_array(&F);
-    delete_array(&x);
-    delete_array(&uk);
-    delete_array(&rk);
-    delete_array(&zk);
+    /* etc */
 
     MPI_Finalize();
 }
