@@ -9,6 +9,8 @@
 #include <string.h>   /* For atoi */
 
 static int s_rank;
+static loglevel_t s_loglevel;
+
 
 /* --------------------------------------------------------------------
     Arrays : 
@@ -39,13 +41,28 @@ void empty_array(int n,double **x)
     *x = malloc(n*sizeof(double));
 }
 
-void ones_array(int n,double **x)
+void zeros_array(int n,double **x)
 {
     int i;
-    *x = malloc(n*sizeof(double));
+    empty_array(n,x);
     for(i = 0; i < n; i++)
     {
-        (*x)[i] = 1;
+        (*x)[i] = 0;
+    }
+}
+
+void ones_array(int n,double **x)
+{
+    constant_array(n,x,1.0);
+}
+
+void constant_array(int n,double **x, double value)
+{
+    int i;
+    empty_array(n,x);
+    for(i = 0; i < n; i++)
+    {
+        (*x)[i] = value;
     }
 }
 
@@ -62,7 +79,7 @@ void linspace_array(double a,double b,int n,double **x)
 
 void random_array(int n, double **x)
 {
-    *x = malloc(n*sizeof(double));    
+    empty_array(n,x);    
     random_seed();   
     int i;
 
@@ -144,10 +161,79 @@ void read_int(int argc, char** argv, char arg[], int* value,int *err)
     }
 }
 
+void read_double(int argc, char** argv, char arg[], double* value,int *err)
+{
+    *err = 1;  /* Nothing found yet */
+    int arg_index = 1;     /* Skip first argument */
+    while (arg_index < argc)
+    {
+        if (strcmp(argv[arg_index], arg) == 0)
+        {
+            arg_index++;
+            *value = atof(argv[arg_index++]);   
+            *err = 0;         
+            return;
+        }
+        else
+        {
+            arg_index++;
+        }
+    }
+}
+
+void read_string(int argc, char** argv, char arg[], char* value,int *err)
+{
+    *err = 1;  /* Nothing found yet */
+    int arg_index = 1;     /* Skip first argument */
+    while (arg_index < argc)
+    {
+        if (strcmp(argv[arg_index], arg) == 0)
+        {
+            arg_index++;            
+            strcpy(value,argv[arg_index++]);   
+            *err = 0;         
+            return;
+        }
+        else
+        {
+            arg_index++;
+        }
+    }
+}
+
+void read_loglevel(int argc, char** argv)
+{
+    int err;
+    char logstr[20];
+    read_string(argc,argv, "--loglevel", logstr, &err);
+    if (err > 0)
+    {
+        strcpy(logstr,"production");
+        print_global("Command line argument '--loglevel' not found.  "\
+                     "Setting to %s\n",logstr);
+    }
+
+    loglevel_t l;
+    char loglevel_list[5][11];  /* 11 = length("production") + 1 */
+    strcpy(loglevel_list[SILENT],     "silent");
+    strcpy(loglevel_list[ESSENTIAL],  "essential");
+    strcpy(loglevel_list[PRODUCTION], "production");
+    strcpy(loglevel_list[INFO],       "info");
+    strcpy(loglevel_list[DEBUG],      "debug");
+
+    for(l = SILENT; l <= DEBUG; l++)
+    {
+        if (strcmp(logstr,loglevel_list[l]) == 0)    
+        {
+            s_loglevel = l;
+            return;
+        }        
+    }
+    s_loglevel = PRODUCTION;
+}
 
 void print_global(const char* format, ... )
 {
-    /* Only print if on processor 0 */
     if (s_rank == 0)
     {
         va_list arglist;
@@ -158,14 +244,43 @@ void print_global(const char* format, ... )
     }
 }
 
+void print_essential(const char* format, ... )
+{
+    /* Only print if on processor 0 */
+    if (s_rank == 0 && s_loglevel > SILENT)
+    {
+        va_list arglist;
+        printf( "Processor [0] : " );
+        va_start( arglist, format );
+        vprintf( format, arglist );
+        va_end( arglist );
+    }
+}
+
+void print_info(const char* format, ... )
+{
+    /* Include rank number in print statement */
+    if (s_rank == 0 && s_loglevel >= INFO)
+    {
+        va_list arglist;
+        printf( "Processor [%d] : ",s_rank);
+        va_start( arglist, format );
+        vprintf( format, arglist );
+        va_end( arglist );
+    }
+}
+
 void print_debug(const char* format, ... )
 {
     /* Include rank number in print statement */
-    va_list arglist;
-    printf( "Processor [%d] : ",s_rank);
-    va_start( arglist, format );
-    vprintf( format, arglist );
-    va_end( arglist );
+    if (s_loglevel >= DEBUG)
+    {
+        va_list arglist;
+        printf( "Processor [%d] : ",s_rank);
+        va_start( arglist, format );
+        vprintf( format, arglist );
+        va_end( arglist );        
+    }
 }
 
 /* -------------------------------------------------
@@ -173,6 +288,7 @@ void print_debug(const char* format, ... )
    ----------------------------------------------- */ 
 void set_rank(int  rank)
 {
+    /* This must be called so that print_debug and print_global work */
     s_rank = rank;
 }
 
