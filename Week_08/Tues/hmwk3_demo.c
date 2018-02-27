@@ -46,7 +46,6 @@ void main(int argc, char** argv)
     /* MPI variables */
     int my_rank, nprocs;
 
-
     /* ----------------------------------------------------------------
        Set up MPI
      ---------------------------------------------------------------- */
@@ -78,7 +77,7 @@ void main(int argc, char** argv)
             print_global("Command line argument '--kmax' not found\n");
             exit(0);
         }
-        
+
         read_double(argc,argv, "--tol", &tol, &err);
         if (err > 0)
         {
