@@ -56,6 +56,11 @@ void ones_array(int n,double **x)
     constant_array(n,x,1.0);
 }
 
+void char_array(int n, char **c)
+{
+    *c = malloc(n*sizeof(char));
+}
+
 void constant_array(int n,double **x, double value)
 {
     int i;

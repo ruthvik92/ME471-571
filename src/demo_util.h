@@ -31,6 +31,8 @@ void random_array(int n, double **array);
 void linspace_array(double a,double b,int n,double **x);
 void delete_array(double **x);
 
+void char_array(int n, char **c);
+
 /* Operations on arrays */
 double sum_array(int n, double *x);
 
