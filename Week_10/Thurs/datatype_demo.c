@@ -24,6 +24,36 @@ double I_exact(double x)
     return I;
 }
 
+void build_domain_type(double *a, double *b, int*n, MPI_Datatype *domain_t)
+{
+    /* Specify "blocklengths" for each entry in our structure */ 
+    int block_lengths[3] = {1,1,1};
+
+    /* Set up types */
+    MPI_Datatype typelist[3];
+    typelist[0] = MPI_DOUBLE;
+    typelist[1] = MPI_DOUBLE;
+    typelist[2] = MPI_INT;
+
+    /* Set up displacements */
+    MPI_Aint start_address;
+    MPI_Aint address;
+    MPI_Aint displacements[3];
+
+    displacements[0] = 0;
+    MPI_Address(a,&start_address);
+    MPI_Address(b,&address);
+    displacements[1] = address - start_address;
+
+    MPI_Address(n,&address);
+    displacements[2] = address - start_address;
+
+    MPI_Type_struct(3,block_lengths, displacements, typelist,domain_t);
+
+    MPI_Type_commit(domain_t);
+}
+
+
 
 void main(int argc, char** argv)
 {
@@ -35,6 +65,9 @@ void main(int argc, char** argv)
 
     /* MPI variables */
     int my_rank, nprocs;
+
+    /* Data type */
+    MPI_Datatype domain_t;
 
     MPI_Init(&argc, &argv);
 
@@ -64,10 +97,17 @@ void main(int argc, char** argv)
 
     /* Broadcast value of N to all processors;  compute number of panels in each 
     subinterval */
+#if 0    
     int root = 0;
     MPI_Bcast(&a,1,MPI_DOUBLE,root,MPI_COMM_WORLD);
     MPI_Bcast(&b,1,MPI_DOUBLE,root,MPI_COMM_WORLD);
     MPI_Bcast(&n_global,1,MPI_INT,root,MPI_COMM_WORLD);
+#endif
+
+    build_domain_type(&a, &b, &n_global, &domain_t);
+
+    int root;
+    MPI_Bcast(&a,1, domain_t, root, MPI_COMM_WORLD);
 
     double w = (b-a)/nprocs;    
     int m = n_global/nprocs;   /* Number of panels in each section */

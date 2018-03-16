@@ -57,9 +57,10 @@ void main(int argc, char** argv)
     MPI_Datatype domain_t;
 
     /* File I/O */
-    MPI_Offset offset;
+    // MPI_Offset offset;
     MPI_File   file;
     MPI_Status status;
+    
     MPI_Datatype num_as_string;
     MPI_Datatype localarray;
 
@@ -136,7 +137,29 @@ void main(int argc, char** argv)
         sprintf(&text[j*charspernum],"%16.12f\n", u[j]);            
     }
 
-    /* Add more here */
+    int globalsize = n_global+1;  /* Leave extra space */
+    int localsize = nsize;
+    int starts = m*my_rank;
+    int order = MPI_ORDER_C;
+
+    MPI_Type_create_subarray(1, &globalsize, &localsize, &starts, order, 
+                             num_as_string, &localarray);
+    MPI_Type_commit(&localarray);
+
+    /* Open file for real */
+    MPI_File_open(MPI_COMM_WORLD, "text.out", 
+                  MPI_MODE_CREATE|MPI_MODE_WRONLY,
+                  MPI_INFO_NULL, &file);
+
+
+    MPI_File_set_view(file, 0,  MPI_CHAR, localarray, 
+                           "native", MPI_INFO_NULL);
+
+    MPI_File_write_all(file, text, localsize, num_as_string, &status);
+    MPI_File_close(&file);
+
+    MPI_Type_free(&localarray);
+    MPI_Type_free(&num_as_string);    
 
 
     delete_array(&x);
