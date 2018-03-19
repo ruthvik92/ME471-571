@@ -66,7 +66,7 @@ void main(int argc, char** argv)
 
     int j;
 
-    const int charspernum = 17;
+    const int charspernum = 40;
 
     /* MPI variables */
     int my_rank, nprocs;
@@ -134,7 +134,7 @@ void main(int argc, char** argv)
     char_array(nsize*charspernum,&text);
     for (j = 0; j < nsize; j++) 
     {
-        sprintf(&text[j*charspernum],"%16.12f\n", u[j]);            
+        sprintf(&text[j*charspernum],"%16.12f %16.12f\n", x[j],u[j]);            
     }
 
     int globalsize = n_global+1;  /* Leave extra space */

@@ -24,7 +24,14 @@ double I_exact(double x)
     return I;
 }
 
-void build_domain_type(double *a, double *b, int*n, MPI_Datatype *domain_t)
+typedef struct 
+{
+    double a;
+    double b; 
+    int n_global;
+} domain_type;
+
+void build_domain_type(domain_type *domain, MPI_Datatype *domain_t)
 {
     /* Specify "blocklengths" for each entry in our structure */ 
     int block_lengths[3] = {1,1,1};
@@ -41,11 +48,11 @@ void build_domain_type(double *a, double *b, int*n, MPI_Datatype *domain_t)
     MPI_Aint displacements[3];
 
     displacements[0] = 0;
-    MPI_Address(a,&start_address);
-    MPI_Address(b,&address);
+    MPI_Address(&(domain->a),&start_address);
+    MPI_Address(&(domain->b),&address);
     displacements[1] = address - start_address;
 
-    MPI_Address(n,&address);
+    MPI_Address(&(domain->n_global),&address);
     displacements[2] = address - start_address;
 
     MPI_Type_struct(3,block_lengths, displacements, typelist,domain_t);
@@ -58,8 +65,7 @@ void build_domain_type(double *a, double *b, int*n, MPI_Datatype *domain_t)
 void main(int argc, char** argv)
 {
     /* Data arrays */
-    double a,b;
-    int n_global;
+    domain_type domain;
     double *x;
     double range[2];
 
@@ -88,11 +94,11 @@ void main(int argc, char** argv)
             exit(0);
         }        
 
-        n_global = pow2(m);     /* Number of sub-intervals used for integration */
+        domain.n_global = pow2(m);     /* Number of sub-intervals used for integration */
 
         /* Hardwire values */
-        a = -1;
-        b = 1;  
+        domain.a = -1;
+        domain.b = 1;  
     }
 
     /* Broadcast value of N to all processors;  compute number of panels in each 
@@ -104,15 +110,15 @@ void main(int argc, char** argv)
     MPI_Bcast(&n_global,1,MPI_INT,root,MPI_COMM_WORLD);
 #endif
 
-    build_domain_type(&a, &b, &n_global, &domain_t);
+    build_domain_type(&domain, &domain_t);
 
     int root;
-    MPI_Bcast(&a,1, domain_t, root, MPI_COMM_WORLD);
+    MPI_Bcast(&domain.a,1, domain_t, root, MPI_COMM_WORLD);
 
-    double w = (b-a)/nprocs;    
-    int m = n_global/nprocs;   /* Number of panels in each section */
+    double w = (domain.b-domain.a)/nprocs;    
+    int m = domain.n_global/nprocs;   /* Number of panels in each section */
 
-    range[0] = a + my_rank*w;
+    range[0] = domain.a + my_rank*w;
     range[1] = range[0] + w;
     double h = (range[1] - range[0])/m;
 
@@ -137,7 +143,8 @@ void main(int argc, char** argv)
     {
         double Ie = -1.0/exp(1.0) + 1.5*sqrt(PI)*erf(1.0);
         double Ie_wolf = 1.872592957265838754602878538; /* Wolfram */
-        print_global("%10d %24.20f %24.20f %12.4e\n",n_global,I,Ie_wolf,fabs(I-Ie_wolf));
+        print_global("%10d %24.20f %24.20f %12.4e\n",
+                     domain.n_global,I,Ie_wolf,fabs(I-Ie_wolf));
     }
 
     delete_array(&x);

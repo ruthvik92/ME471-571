@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <math.h>
 #include <time.h>
 
@@ -36,9 +37,28 @@ static loglevel_t s_loglevel;
         delete_array    : Deletes memory for x
    ------------------------------------------------------------------ */ 
 
+static
+void pointer_array(int n, void*** x)
+{
+    *x = malloc(n*sizeof(void*));
+}
+
 void empty_array(int n,double **x)
 {
     *x = malloc(n*sizeof(double));
+}
+
+void empty_array2(int nrows,int ncols, double ***A)
+{
+    double *x;
+    int i;
+
+    empty_array(nrows*ncols,&x);     
+    pointer_array(nrows,(void***) A); 
+    for(i = 0; i < nrows; i++)
+    {
+        (*A)[i] = &x[i*ncols];       
+    }
 }
 
 void zeros_array(int n,double **x)
@@ -98,6 +118,13 @@ void delete_array(double **x)
 {
     free(*x);
 }
+
+void delete_array2(double ***A)
+{
+    free(**A);
+    free(*A);
+}
+
 
 
 /* --------------------------------------------------------------------

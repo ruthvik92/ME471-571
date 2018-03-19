@@ -31,6 +31,9 @@ void random_array(int n, double **array);
 void linspace_array(double a,double b,int n,double **x);
 void delete_array(double **x);
 
+void empty_array2(int nrows,int ncols, double ***x);
+void delete_array2(double ***A);
+
 void char_array(int n, char **c);
 
 /* Operations on arrays */
