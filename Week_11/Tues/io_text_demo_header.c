@@ -146,7 +146,7 @@ void main(int argc, char** argv)
     MPI_Type_commit(&localarray);
 
     /* Open file for real */
-    MPI_File_open(MPI_COMM_WORLD, "text.out", 
+    MPI_File_open(MPI_COMM_WORLD, "text_header.out", 
                   MPI_MODE_CREATE|MPI_MODE_WRONLY,
                   MPI_INFO_NULL, &file);
 
@@ -159,6 +159,7 @@ void main(int argc, char** argv)
 
     MPI_Type_free(&localarray);
     MPI_Type_free(&num_as_string);    
+
 
     delete_array((void*) &x);
     delete_array((void*) &u);
