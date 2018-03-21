@@ -137,7 +137,7 @@ void main(int argc, char** argv)
     {
         char *header;
         char_array(header_size+1,&header);
-        sprintf(&header[0*hlen],"%*.*f\n",width,2,domain.a); /* 15 lines each */
+        sprintf(&header[0*hlen],"%*.*f\n",width,2,domain.a); 
         sprintf(&header[1*hlen],"%*.*f\n",width,2,domain.b);
         sprintf(&header[2*hlen],"%*d\n", width,domain.n_global);
         MPI_File_write(file,header,header_size,MPI_CHAR,MPI_STATUS_IGNORE);  
@@ -145,7 +145,7 @@ void main(int argc, char** argv)
     }
 
 
-    /* ---- Create text string to write out */
+    /* ---- Create text string from solution */
     int nlen = nsize*chars_per_row;    /* 1 byte per character */
     char_array(nlen+1,&text);  /* extra space for null termination character */
 
@@ -168,6 +168,7 @@ void main(int argc, char** argv)
                              row_t, &localarray);
     MPI_Type_commit(&localarray);
 
+    /* ---- Determine where the view should start */
     MPI_Offset offset = header_size;    /* in bytes;  skip header */
     MPI_File_set_view(file, offset,  row_t, localarray, 
                            "native", MPI_INFO_NULL);

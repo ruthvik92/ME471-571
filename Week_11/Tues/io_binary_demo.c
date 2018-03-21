@@ -3,8 +3,8 @@
 
 #include <mpi.h>
 #include <math.h>
-#include <stdio.h>
-#include <stddef.h>
+#include <stdio.h>  
+#include <stddef.h>  /* offsetof */
 
 #define PI 3.14159265358979323846264338327
 
@@ -45,7 +45,6 @@ void build_domain_type(MPI_Datatype *domain_t)
 }
 
 
-
 void main(int argc, char** argv)
 {
     /* Data arrays */
@@ -55,30 +54,30 @@ void main(int argc, char** argv)
 
 
     /* File I/O */
-    // MPI_Offset offset;
     MPI_File   file;
     MPI_Status status;
     
     /* Data type */
     MPI_Datatype domain_t;
     MPI_Datatype localarray;
+    int rank, nprocs;
 
     int j;
 
-    /* MPI variables */
-    int my_rank, nprocs;
 
+    /* ---- MPI Initialization */
     MPI_Init(&argc, &argv);
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    set_rank(my_rank);  /* Used in printing */
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    set_rank(rank);  
     read_loglevel(argc,argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (my_rank == 0)
+    /* ---- Read data from command line */
+    if (rank == 0)
     {        
-        int m,err,loglevel;
+        int m,err;
         read_int(argc,argv, "-m", &m, &err);
         if (err > 0)
         {
@@ -86,31 +85,26 @@ void main(int argc, char** argv)
             exit(0);
         }        
 
-        domain.n_global = pow2(m);     /* Number of sub-intervals used for integration */
+        domain.n_global = pow2(m);    
 
-        /* Hardwire values */
         domain.a = 0;
         domain.b = 1;  
     }
 
+    /* ---- Communicate data and set up domain */
     build_domain_type(&domain_t);
 
-    /* Broadcast global information */
-    int root = 0;
-    MPI_Bcast(&domain.a,1,domain_t,root,MPI_COMM_WORLD);
+    MPI_Bcast(&domain,1,domain_t,0,MPI_COMM_WORLD);
 
     double w = (domain.b-domain.a)/nprocs;    
-    int m = domain.n_global/nprocs;   /* Number of panels in each section */
+    int m = domain.n_global/nprocs;   
 
-    range[0] = domain.a + my_rank*w;
+    range[0] = domain.a + rank*w;
     range[1] = range[0] + w;
-    double h = (range[1] - range[0])/m;
 
-    /* ---------------------------------------------------------------
-       Set up array to write out
-    --------------------------------------------------------------- */
+    /* ---- Get solution */
     linspace_array(range[0],range[1],m+1,&x);
-    int nsize = my_rank < nprocs-1 ? m : m+1;
+    int nsize = rank < nprocs-1 ? m : m+1;
     zeros_array(nsize,&u);
 
     for(j = 0; j < nsize; j++)
@@ -118,20 +112,16 @@ void main(int argc, char** argv)
         u[j] = utrue(x[j]);
     }
 
-    /* ----------------------------------------------------------------
-       Write out file
-    ---------------------------------------------------------------- */
-
-    int globalsize = domain.n_global+1;  /* Leave extra space */
+    /* ---- Create view for this processor into file */
+    int globalsize = domain.n_global+1; 
     int localsize = nsize;
-    int starts = m*my_rank;
+    int starts = m*rank;
     int order = MPI_ORDER_C;
 
     MPI_Type_create_subarray(1, &globalsize, &localsize, &starts, order, 
                              MPI_DOUBLE, &localarray);
     MPI_Type_commit(&localarray);
 
-    /* Open file for real */
     MPI_File_open(MPI_COMM_WORLD, "bin.out", 
                   MPI_MODE_CREATE|MPI_MODE_WRONLY,
                   MPI_INFO_NULL, &file);
@@ -140,7 +130,10 @@ void main(int argc, char** argv)
     MPI_File_set_view(file, offset,  MPI_DOUBLE, localarray, 
                            "native", MPI_INFO_NULL);
 
-    MPI_File_write_all(file, u, localsize, MPI_DOUBLE,MPI_STATUS_IGNORE);
+    /* ---- Write out file */
+    MPI_File_write_all(file, u, localsize, MPI_DOUBLE, MPI_STATUS_IGNORE);
+
+    /* ---- Clean up */
     MPI_File_close(&file);
 
     MPI_Type_free(&localarray);

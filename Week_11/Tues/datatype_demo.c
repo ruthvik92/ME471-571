@@ -96,7 +96,7 @@ void main(int argc, char** argv)
     build_domain_type(&domain_t);
 
     int root;
-    MPI_Bcast(&domain.a,1, domain_t, root, MPI_COMM_WORLD);
+    MPI_Bcast(&domain,1, domain_t, root, MPI_COMM_WORLD);
 
     double w = (domain.b-domain.a)/nprocs;    
     int m = domain.n_global/nprocs;   /* Number of panels in each section */
@@ -129,7 +129,7 @@ void main(int argc, char** argv)
                      domain.n_global,I,Ie_wolf,fabs(I-Ie_wolf));
     }
 
-    delete_array(&x);
+    delete_array((void*) &x);
 
     MPI_Finalize();
 
