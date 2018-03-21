@@ -3,8 +3,8 @@
 
 #include <mpi.h>
 #include <math.h>
-#include <stdio.h>
-#include <stddef.h>
+#include <stdio.h>  
+#include <stddef.h>  /* offsetof */
 
 #define PI 3.14159265358979323846264338327
 
@@ -45,7 +45,6 @@ void build_domain_type(MPI_Datatype *domain_t)
 }
 
 
-
 void main(int argc, char** argv)
 {
     /* Data arrays */
@@ -55,33 +54,42 @@ void main(int argc, char** argv)
 
 
     /* File I/O */
-    // MPI_Offset offset;
     MPI_File   file;
     MPI_Status status;
     
     /* Data type */
     MPI_Datatype domain_t;
-    MPI_Datatype num_as_string;
+    MPI_Datatype row_t;
     MPI_Datatype localarray;
+    int rank, nprocs;
+
+    /* Length of each row in text file */
+    const int chars_per_row = 24;
+
+    /* Formatting parameters : 
+        -- All formats   : Leave one space for '\n' (line feed character)
+        -- Fixed point   : Leave at least 2 spaces for '.' and '+' or '-'
+        -- Sci. notation : Leave at least 6 spaces for 'e+NN', '.' and '+' or '-'
+    */
+    const int width = chars_per_row-1;  
+    const int precision = 16;           /* check : precision+6 <= width */
 
     int j;
 
-    const int charspernum = 21;
 
-    /* MPI variables */
-    int my_rank, nprocs;
-
+    /* ---- MPI Initialization */
     MPI_Init(&argc, &argv);
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    set_rank(my_rank);  /* Used in printing */
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    set_rank(rank);  
     read_loglevel(argc,argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (my_rank == 0)
+    /* ---- Read data from command line */
+    if (rank == 0)
     {        
-        int m,err,loglevel;
+        int m,err;
         read_int(argc,argv, "-m", &m, &err);
         if (err > 0)
         {
@@ -89,31 +97,26 @@ void main(int argc, char** argv)
             exit(0);
         }        
 
-        domain.n_global = pow2(m);     /* Number of sub-intervals used for integration */
+        domain.n_global = pow2(m);    
 
-        /* Hardwire values */
         domain.a = 0;
         domain.b = 1;  
     }
 
+    /* ---- Communicate data and set up domain */
     build_domain_type(&domain_t);
 
-    /* Broadcast global information */
-    int root = 0;
-    MPI_Bcast(&domain.a,1,domain_t,root,MPI_COMM_WORLD);
+    MPI_Bcast(&domain,1,domain_t,0,MPI_COMM_WORLD);
 
     double w = (domain.b-domain.a)/nprocs;    
-    int m = domain.n_global/nprocs;   /* Number of panels in each section */
+    int m = domain.n_global/nprocs;   
 
-    range[0] = domain.a + my_rank*w;
+    range[0] = domain.a + rank*w;
     range[1] = range[0] + w;
-    double h = (range[1] - range[0])/m;
 
-    /* ---------------------------------------------------------------
-       Set up array to write out
-    --------------------------------------------------------------- */
+    /* ---- Get solution */
     linspace_array(range[0],range[1],m+1,&x);
-    int nsize = my_rank < nprocs-1 ? m : m+1;
+    int nsize = rank < nprocs-1 ? m : m+1;
     zeros_array(nsize,&u);
 
     for(j = 0; j < nsize; j++)
@@ -121,31 +124,31 @@ void main(int argc, char** argv)
         u[j] = utrue(x[j]);
     }
 
-    /* ----------------------------------------------------------------
-       Write out file
-    ---------------------------------------------------------------- */
-    /* each line is represented by charspernum chars */
-    MPI_Type_contiguous(charspernum, MPI_CHAR, &num_as_string); 
-    MPI_Type_commit(&num_as_string); 
-
-    /* convert our data into txt */
+    /* ---- Create text string to write out */
     char *text;
-    char_array(nsize*charspernum,&text);
+    int nlen = nsize*chars_per_row;    /* 1 byte per character */
+
+    char_array(nlen+1,&text);  /* extra space for null termination character */
+
     for (j = 0; j < nsize; j++) 
     {
-        sprintf(&text[j*charspernum],"%20.12f\n",u[j]);            
+        sprintf(&text[j*chars_per_row],"%*.*e\n",width,precision,u[j]);      
     }
 
-    int globalsize = domain.n_global+1;  /* Leave extra space */
+    /* ---- Create data type to store rows of each text file */
+    MPI_Type_contiguous(chars_per_row, MPI_CHAR, &row_t); 
+    MPI_Type_commit(&row_t); 
+
+    int globalsize = domain.n_global+1; 
     int localsize = nsize;
-    int starts = m*my_rank;
+    int starts = m*rank;
     int order = MPI_ORDER_C;
 
+    /* ---- Create view for this processor into file */
     MPI_Type_create_subarray(1, &globalsize, &localsize, &starts, order, 
-                             num_as_string, &localarray);
+                             row_t, &localarray);
     MPI_Type_commit(&localarray);
 
-    /* Open file for real */
     MPI_File_open(MPI_COMM_WORLD, "text.out", 
                   MPI_MODE_CREATE|MPI_MODE_WRONLY,
                   MPI_INFO_NULL, &file);
@@ -154,12 +157,16 @@ void main(int argc, char** argv)
     MPI_File_set_view(file, offset,  MPI_CHAR, localarray, 
                            "native", MPI_INFO_NULL);
 
-    MPI_File_write_all(file, text, localsize, num_as_string,MPI_STATUS_IGNORE);
+    /* ---- Write out file */
+    MPI_File_write_all(file, text, localsize, row_t,MPI_STATUS_IGNORE);
+
+    /* ---- Clean up */
     MPI_File_close(&file);
 
     MPI_Type_free(&localarray);
-    MPI_Type_free(&num_as_string);    
+    MPI_Type_free(&row_t);    
 
+    delete_array((void*) &text);
     delete_array((void*) &x);
     delete_array((void*) &u);
 
