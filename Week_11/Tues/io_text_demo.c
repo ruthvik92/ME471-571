@@ -139,12 +139,12 @@ void main(int argc, char** argv)
     MPI_Type_contiguous(chars_per_row, MPI_CHAR, &row_t); 
     MPI_Type_commit(&row_t); 
 
+    /* ---- Create view for this processor into file */
     int globalsize = domain.n_global+1; 
     int localsize = nsize;
     int starts = m*rank;
     int order = MPI_ORDER_C;
 
-    /* ---- Create view for this processor into file */
     MPI_Type_create_subarray(1, &globalsize, &localsize, &starts, order, 
                              row_t, &localarray);
     MPI_Type_commit(&localarray);
@@ -154,7 +154,7 @@ void main(int argc, char** argv)
                   MPI_INFO_NULL, &file);
 
     MPI_Offset offset = 0;
-    MPI_File_set_view(file, offset,  MPI_CHAR, localarray, 
+    MPI_File_set_view(file, offset,  row_t, localarray, 
                            "native", MPI_INFO_NULL);
 
     /* ---- Write out file */
