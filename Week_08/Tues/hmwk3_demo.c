@@ -99,13 +99,31 @@ void main(int argc, char** argv)
     --------------------------------------------------------------- */
 
     /* TODO : .... */
+    int root = 0;
+    MPI_Bcast(&a,1,MPI_DOUBLE,root,MPI_COMM_WORLD);
+    MPI_Bcast(&b,1,MPI_DOUBLE,root,MPI_COMM_WORLD);
+    MPI_Bcast(&n_global,1,MPI_INT,root,MPI_COMM_WORLD);
+    MPI_Bcast(&kmax, 1,MPI_INT,root,MPI_COMM_WORLD);
+    MPI_Bcast(&tol, 1,MPI_DOUBLE,root,MPI_COMM_WORLD);
+
+    double w = (b-a)/nprocs;
+    double h = (b-a)/n_global;
+    int m = n_global/nprocs;
+
+    range[0] = my_rank*w;
+    range[1] = range[0] + w;
 
     /* ---------------------------------------------------------------
        Set up right hand side and any inhomogenous boundary conditions
     --------------------------------------------------------------- */
     zeros_array(10,&B);  /* Change 10 to proper size */
+    zeros_array(m+3,&F);
+    linspace_array(range[0]-h,range[1]+h,m+3,&x);
 
-    /* TODO : .... */
+    for(j = 0; j < m+1; j++)
+    {
+        F[j] = rhs(x[j]);  /* Include boundary conditions */
+    }
 
     /* ----------------------------------------------------------------
        Set up arrays and other vars needed for iterative method

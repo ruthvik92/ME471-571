@@ -41,11 +41,21 @@ static
 void pointer_array(int n, void*** x)
 {
     *x = malloc(n*sizeof(void*));
+    if (x == NULL)
+    {
+        print_essential("pointer_array : array allocation error\n");
+        exit(0);
+    }
 }
 
 void empty_array(int n,double **x)
 {
     *x = malloc(n*sizeof(double));
+    if (x == NULL)
+    {
+        print_essential("empty_array : array allocation error\n");
+        exit(0);
+    }
 }
 
 void empty_array2(int nrows,int ncols, double ***A)
@@ -79,6 +89,11 @@ void ones_array(int n,double **x)
 void char_array(int n, char **c)
 {
     *c = malloc(n*sizeof(char));
+    if (c == NULL)
+    {
+        print_essential("char_array : array allocation error\n");
+        exit(0);
+    }
 }
 
 void constant_array(int n,double **x, double value)
@@ -114,12 +129,12 @@ void random_array(int n, double **x)
     }
 }
 
-void delete_array(double **x)
+void delete_array(void **x)
 {
     free(*x);
 }
 
-void delete_array2(double ***A)
+void delete_array2(void ***A)
 {
     free(**A);
     free(*A);
@@ -240,9 +255,8 @@ void read_loglevel(int argc, char** argv)
     read_string(argc,argv, "--loglevel", logstr, &err);
     if (err > 0)
     {
-        strcpy(logstr,"production");
-        print_global("Command line argument '--loglevel' not found.  "\
-                     "Setting to %s\n",logstr);
+        /* No loglevel specified at command */
+        strcpy(logstr,"essential"); /* Default */
     }
 
     loglevel_t l;
@@ -261,7 +275,7 @@ void read_loglevel(int argc, char** argv)
             return;
         }        
     }
-    s_loglevel = PRODUCTION;
+    s_loglevel = PRODUCTION;  /* Default, before anything else is set */
 }
 
 void print_global(const char* format, ... )

@@ -29,12 +29,13 @@ void ones_array(int n,double **x);
 void constant_array(int n,double **x, double value);
 void random_array(int n, double **array);
 void linspace_array(double a,double b,int n,double **x);
-void delete_array(double **x);
+void delete_array(void **x);
 
 void empty_array2(int nrows,int ncols, double ***x);
-void delete_array2(double ***A);
+void delete_array2(void ***A);
 
 void char_array(int n, char **c);
+void delete_char_array(char **c);
 
 /* Operations on arrays */
 double sum_array(int n, double *x);

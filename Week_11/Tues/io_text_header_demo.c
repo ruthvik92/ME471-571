@@ -98,7 +98,7 @@ void main(int argc, char** argv)
         }        
 
         domain.n_global = pow2(m);    
-        domain.a = 0;
+        domain.a = -1;
         domain.b = 1;  
     }
 
