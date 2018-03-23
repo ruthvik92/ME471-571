@@ -115,6 +115,16 @@ void main(int argc, char** argv)
             print_global("Command line argument '-L' not found\n");
             exit(0);
         }        
+        int i,n1 = 1;
+        for(i=0; i < L; i++)
+            n1 *= 4;
+        if (n1 != nprocs)
+        {
+            print_essential("4^L != number of procs\n");
+            exit(0);
+        }
+
+        /* Grid size on each processor */
         read_int(argc,argv, "-m", &m, &err);
         if (err > 0)
         {
@@ -123,10 +133,10 @@ void main(int argc, char** argv)
         }        
 
 
-        domain.a[0] = 0;
-        domain.a[1] = 0;
-        domain.b[0] = 1;  
-        domain.b[1] = 1;
+        domain.a[0] = -1;    /* xlower */
+        domain.a[1] = -1;    /* ylower */
+        domain.b[0] = 1;     /* xupper */
+        domain.b[1] = 1;     /* yupper */
 
         domain.n_global[0] = pow2(L)*m;    
         domain.n_global[1] = pow2(L)*m;  
@@ -139,11 +149,11 @@ void main(int argc, char** argv)
 
     MPI_Bcast(&domain,1,domain_t,0,MPI_COMM_WORLD);
 
-    int pdim = (int) sqrt(nprocs);
+    int pdim = (int) sqrt(nprocs);  /* Procs in each direction */
     if (abs(pdim*pdim-nprocs) > 1e-8)
     {
         print_essential("pdim = %d; nprocs = %d\n",pdim,nprocs);
-        print_essential("Proc count is not square\n");
+        print_essential("Proc count should be a square number.\n");
         exit(0);
     }
 
