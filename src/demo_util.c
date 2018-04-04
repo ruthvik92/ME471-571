@@ -108,9 +108,14 @@ void constant_array(int n,double **x, double value)
 
 void linspace_array(double a,double b,int n,double **x)
 {
-    double h = (b-a)/(n-1);
     int i;
     empty_array(n,x);
+    if (n == 1)
+    {
+        (*x)[0] = b;  /* This is what Matlab's linspace does */
+        return;
+    }
+    double h = (b-a)/(n-1);
     for(i = 0; i < n; i++)
     {
         (*x)[i] = a + i*h;
@@ -354,9 +359,16 @@ double random_number()
   return (double) rand() / (double) RAND_MAX ;
 }
 
+int random_int(int m, int n)
+{
+    int r = floor((n+0.999999-m)*random_number());
+    return r;
+}
+
 void random_seed()
 {
-    srand(time(NULL));
+    srand(time(NULL) + s_rank);
+    int skip = random_number();  /* To start the seed?  */
 }
 
 int pow2(int p)

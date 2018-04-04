@@ -58,6 +58,8 @@ void set_rank();
 double random_number();
 void random_seed();
 int pow2(int p);
+int random_int(int m, int n);
+
 
 #ifdef __cplusplus
 #if 0

@@ -165,6 +165,7 @@ void main(int argc, char** argv)
 
     MPI_Type_free(&localarray);
     MPI_Type_free(&row_t);    
+    MPI_Type_free(&domain_t);
 
     delete_array((void*) &text);
     delete_array((void*) &x);
