@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <sys/time.h>
+<<<<<<< HEAD
 #include <cuda_util.h>
 #include <demo_util.h>
+=======
+#include <demo_util.h>
+#include <cuda_util.h>
+>>>>>>> origin/master
 
 __global__ void addmat(int m, int n, int* A, int *B, int *C) 
 {
@@ -56,7 +61,11 @@ int main(int argc, char** argv)
 
     int err1, err2; 
     read_int(argc, argv, "--dimx", &dimx, &err1);
+<<<<<<< HEAD
     read_int(argc, argv, "--dimy", &dimy, &err2);    
+=======
+    read_int(argc, argv, "--dimy", &dimy, &err2);
+>>>>>>> origin/master
 
     if (err1 > 0 || err2 > 0)
     {

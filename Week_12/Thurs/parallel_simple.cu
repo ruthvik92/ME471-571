@@ -6,7 +6,7 @@ __global__ void add( int *c)
     c[id] = id;
 }
 
-#define N 1024
+#define N 10
 
 int main(void) 
 {
