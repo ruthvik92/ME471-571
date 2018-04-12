@@ -7,23 +7,9 @@ fi
 module load gcc/4.8.1
 module load slurm 
 module load openmpi/gcc-4.8.1/cuda75/1.10.1
-module load cuda80/toolkit/8.0
+module load cuda75/toolkit/7.5
 module load python/3.5.1
 
-#-----------------------------------
-# Include '.' in PATH
-#-----------------------------------
+source ~/.bash_alias
 export PATH=.:${PATH}
-
-#####Please Do not Remove the following from your .bashrc Thanks Jason #######
-if [ "$(hostname)" == 'kestrel' ]
-then    
-        module load cmsh
-        export EMAIL=`cmsh -c "user show user $USER" | grep email | awk '{print $2 }'`
-        export GROUPNAME=`groups $USER | awk '{print $3}'`
-        module remove cmsh
-fi
-
-
-##############################################################################
 
