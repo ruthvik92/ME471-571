@@ -111,9 +111,9 @@ int main(int argc, char** argv)
 
     start = cpuSecond();
     addmat<<<grid,block>>>(m,n,dev_A, dev_B, dev_C);
-    CHECK(cudaPeekAtLastError());
-    CHECK(cudaDeviceSynchronize());
+    cudaDeviceSynchronize();
     etime = cpuSecond() - start;
+    CHECK(cudaPeekAtLastError());
     printf("%20s %10.3g (s)\n","GPU Kernel", etime);
 
     /* Copy contents from device back to host */
