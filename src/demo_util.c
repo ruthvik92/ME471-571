@@ -193,7 +193,7 @@ double sum_array(int n, double *x)
         
     ------------------------------------------------------------------ */
 
-void read_int(int argc, char** argv, char arg[], int* value,int *err)
+void read_int(int argc, char** argv, const char arg[], int* value,int *err)
 {
     *err = 1;  /* Nothing found yet */
     int arg_index = 1;     /* Skip first argument */
