@@ -59,6 +59,8 @@ double random_number();
 void random_seed();
 int pow2(int p);
 int random_int(int m, int n);
+void sleep(double t_total);
+
 
 
 #ifdef __cplusplus
