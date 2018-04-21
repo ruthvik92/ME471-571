@@ -4,7 +4,7 @@
 #include <cuda_util.h>
 
 
-// #define CLOCK_RATE 1080000     // on Tesla
+//#define CLOCK_RATE 1080000     // on Tesla
 #define CLOCK_RATE 1124000     // On Kepler
 
 double cpuSecond()
@@ -48,9 +48,10 @@ int main(int argc, char** argv)
 
     uint  *sm_id, *dev_sm_id;
     float *t, *dev_t; 
-    float *work_per_SM;
+    int *blocks_per_SM;
     int i, mp, N, M;
     double etime, start;
+    double scale_factor;
 
     cudaGetDeviceProperties(&prop, 0); /* Only look at first processor */
 
@@ -81,9 +82,13 @@ int main(int argc, char** argv)
     cudaMalloc( (void**)&dev_t, N*sizeof(float));
     cudaMalloc( (void**)&dev_sm_id, N*sizeof(uint));
 
+    printf("Memory requirement : %0.2f (kB)\n",N*(sizeof(float) + sizeof(uint))/(1024));
+
+    scale_factor = 100.0;
+
     /* thread work */
     for(i = 0; i < N; i++)
-        t[i] = 1;
+        t[i] = 1.0/scale_factor;
 
     cudaMemcpy(dev_t, t, N*sizeof(float), cudaMemcpyHostToDevice);
 
@@ -102,12 +107,14 @@ int main(int argc, char** argv)
     cudaMemcpy(sm_id, dev_sm_id, N*sizeof(uint), cudaMemcpyDeviceToHost);
 
     /* Post process data */
-    work_per_SM = (float*) malloc(mp*sizeof(float));
+    blocks_per_SM = (int*) malloc(mp*sizeof(float));
     printf("Device has %d SMs\n",mp);
 
     for(i = 0; i < mp; i++)
-        work_per_SM[i] = 0;
+        blocks_per_SM[i] = 0;
 
+    printf("Distribution of blocks on SMs\n");
+    printf("------------------------------------------------------------------------------\n");
     int prt = N <= (1 << 11);
     int j, k = 0;
     for(i = 0; i < (N+mp-1)/mp; i++)
@@ -122,7 +129,7 @@ int main(int argc, char** argv)
             {
                 printf("(%3d,%2d)  ",k,sm_id[k]);                
             }
-            work_per_SM[sm_id[k]] += t[k];
+            blocks_per_SM[sm_id[k]] += 1;
             k++;            
             if (k == N)
                 break;
@@ -132,21 +139,29 @@ int main(int argc, char** argv)
             printf("\n");
         }
     }
+    printf("------------------------------------------------------------------------------\n");
     printf("\n");
+    printf("Blocks per SM\n");
+    printf("---------------------\n");
     for(i = mp-1; i >= 0; i--)
     {
-        printf("SM[%2d] = %6.1f\n",i,work_per_SM[i]);
+        printf("SM[%2d] = %6d\n",i,blocks_per_SM[i]);
     }
-
+    printf("---------------------\n");
     printf("\n");
-    printf("%20s %10.3g (s)\n","GPU Kernel Time", etime);
+    int total_threads = block.x*grid.x;
+    printf("%27s %12d\n", "Threads per block",block.x*block.y);
+    printf("%27s %12d\n", "Total number of blocks",grid.x);
+    printf("%27s %12d\n", "Total number of threads",total_threads);
+    printf("%27s %12.3f (s)\n","GPU Kernel Time (scaled)", scale_factor*etime);
+    printf("\n");
 
     cudaFree(dev_t);
     cudaFree(dev_sm_id);
 
     free(t);
     free(sm_id);
-    free(work_per_SM);
+    free(blocks_per_SM);
 
     cudaDeviceReset();
 

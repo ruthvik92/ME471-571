@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#define P (1 << 14)
+#define P 1
 
 __global__ void copymat_x(int m, int n, int* A, int *B) 
 {    

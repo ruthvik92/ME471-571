@@ -17,7 +17,7 @@ int main( void )
         printf("\n");
         sprintf(str,"%d.%d",prop.major, prop.minor);
         printf("Compute capability    :  %14s\n",str);
-        printf("Clock rate            :  %14.2f (GHz)\n", prop.clockRate/1000000.0);
+        printf("Clock rate            :  %14.8f (GHz)\n", prop.clockRate/1000000.0);
         printf("\n");
 
 
