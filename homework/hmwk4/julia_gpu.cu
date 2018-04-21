@@ -94,8 +94,8 @@ int main( void ) {
     HANDLE_ERROR( cudaFree( dev_bitmap ) );
                               
     FILE *file = fopen("julia_gpu.out","w");
-    uint dim = DIM;
-    fwrite(&dim,1,sizeof(uint),file);
+    int dim = DIM;
+    fwrite(&dim,1,sizeof(int),file);
     fwrite(bitmap.get_ptr(),4*DIM*DIM,sizeof(unsigned char),file);
     fclose(file);
 
