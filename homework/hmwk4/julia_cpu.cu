@@ -19,7 +19,8 @@
 
 #define DIM 2048
 
-struct cuComplex {
+struct cuComplex 
+{
     float   r;
     float   i;
     cuComplex( float a, float b ) : r(a), i(b)  {}
@@ -32,7 +33,8 @@ struct cuComplex {
     }
 };
 
-int julia( int x, int y ) { 
+int julia( int x, int y ) 
+{ 
     const float scale = 2.0;
     float xm = (float) DIM/2.0;
     float jx = scale * (x/xm-1);
@@ -66,7 +68,8 @@ void kernel( unsigned char *ptr ){
     }
  }
 
-int main( void ) {
+int main( void ) 
+{
     CPUBitmap bitmap( DIM, DIM );
     unsigned char *ptr = bitmap.get_ptr();
 
@@ -74,7 +77,7 @@ int main( void ) {
 
     FILE *file = fopen("julia_cpu.out","w");
     int dim = DIM;
-    fwrite(&dim,1,sizeof(uint),file);
+    fwrite(&dim,1,sizeof(int),file);
     fwrite(bitmap.get_ptr(),4*DIM*DIM,sizeof(unsigned char),file);
     fclose(file);
     // bitmap.display_and_exit();
