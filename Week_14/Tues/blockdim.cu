@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#define P 1
+#define P (1<<14)
 
 __global__ void copymat_x(int m, int n, int* A, int *B) 
 {    
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     cudaMalloc((void**) &dev_B, nbytes);
     cudaMemcpy(dev_A, A, nbytes, cudaMemcpyHostToDevice);
 
-#if 1
+#if 0
     /* One thread per row */
     dim3 block(1,32);  
     dim3 grid(1,(n+block.y-1)/block.y);

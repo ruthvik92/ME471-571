@@ -8,6 +8,8 @@ INCLUDE_DIR = -I${me471}/src -I/usr/include
 
 objs = ${SRC}/demo_util.c
 
+CFLAGS=-O2
+
 .PHONY: device_info sm host blockdim warpdiv
 
 device_info: device_info.cu ${objs}
@@ -17,10 +19,10 @@ sm: sm.cu ${objs}
 	${NVC} -o sm  ${INCLUDE_DIR} sm.cu ${objs} -lm
 
 blockdim: blockdim.cu ${objs}
-	${NVC} -o blockdim  ${INCLUDE_DIR} blockdim.cu ${objs} -lm
+	${NVC} -o blockdim  ${CFLAGS} ${INCLUDE_DIR} blockdim.cu ${objs} -lm
 
 host: host.cu ${objs}
-	${NVC} -o host  ${INCLUDE_DIR} host.cu ${objs} -lm
+	${NVC} -o host  ${CFLAGS} ${INCLUDE_DIR} host.cu ${objs} -lm
 
 warpdiv: warpdiv.cu ${objs}
 	${NVC} -o warpdiv  ${INCLUDE_DIR} warpdiv.cu ${objs} -lm

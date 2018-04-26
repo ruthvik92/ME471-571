@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     B = (int*) malloc(nbytes);
 
     start = cpuSecond();
-#if 1
+#if 0
     copymat_host_x(m,n,A,B);
 #else
     copymat_host_y(m,n,A,B);

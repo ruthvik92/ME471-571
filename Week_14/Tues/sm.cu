@@ -36,10 +36,10 @@ __global__ void worker(float *t,uint *s)
     int id = blockIdx.x;
     s[id] = get_smid();
     sleep(t[id]);
-    __syncthreads();
+    // __syncthreads();
 }
 
-#define blocks_per_MP 16     /* for Kepler */
+#define blocks_per_MP 32     /* for Kepler */
 
 int main(int argc, char** argv) 
 {
@@ -61,18 +61,25 @@ int main(int argc, char** argv)
 
     /* Read in number of blocks to launch */
     int err; 
-    read_int(argc, argv, "--N", &N, &err);
+    read_int(argc, argv, "--grid", &N, &err);
     if (err > 0)
     {
-        printf("N set to default value 64\n");
+        printf("Grid dimension (grid.x) set to default value 64\n");
         N = 64;
     }
 
-    read_int(argc, argv, "--M", &M, &err);
+    read_int(argc, argv, "--block", &M, &err);
     if (err > 0)
     {
-        printf("M set to default value 1\n");
+        printf("Block dimension (block.x) set to default value 1\n");
         M = 1;
+    }
+
+    read_double(argc, argv, "--scale", &scale_factor, &err);
+    if (err > 0)
+    {
+        scale_factor = 1.0;
+        printf("Scale factor set to %g\n",scale_factor);
     }
 
     t = (float*) malloc(N*sizeof(float));
@@ -84,7 +91,7 @@ int main(int argc, char** argv)
 
     printf("Memory requirement : %0.2f (kB)\n",N*(sizeof(float) + sizeof(uint))/(1024));
 
-    scale_factor = 100.0;
+    // scale_factor = 100.0;
 
     /* thread work */
     for(i = 0; i < N; i++)
@@ -143,7 +150,7 @@ int main(int argc, char** argv)
     printf("\n");
     printf("Blocks per SM\n");
     printf("---------------------\n");
-    for(i = mp-1; i >= 0; i--)
+    for(i = 0; i < mp; i++)
     {
         printf("SM[%2d] = %6d\n",i,blocks_per_SM[i]);
     }
@@ -153,6 +160,7 @@ int main(int argc, char** argv)
     printf("%27s %12d\n", "Threads per block",block.x*block.y);
     printf("%27s %12d\n", "Total number of blocks",grid.x);
     printf("%27s %12d\n", "Total number of threads",total_threads);
+    printf("%27s %12g\n", "Time scaling factor",scale_factor);
     printf("%27s %12.3f (s)\n","GPU Kernel Time (scaled)", scale_factor*etime);
     printf("\n");
 
