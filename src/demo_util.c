@@ -213,7 +213,7 @@ void read_int(int argc, char** argv, const char arg[], int* value,int *err)
     }
 }
 
-void read_double(int argc, char** argv, char arg[], double* value,int *err)
+void read_double(int argc, char** argv, const char arg[], double* value,int *err)
 {
     *err = 1;  /* Nothing found yet */
     int arg_index = 1;     /* Skip first argument */
@@ -233,7 +233,7 @@ void read_double(int argc, char** argv, char arg[], double* value,int *err)
     }
 }
 
-void read_string(int argc, char** argv, char arg[], char* value,int *err)
+void read_string(int argc, char** argv, const char arg[], char* value,int *err)
 {
     *err = 1;  /* Nothing found yet */
     int arg_index = 1;     /* Skip first argument */

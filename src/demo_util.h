@@ -41,9 +41,9 @@ void delete_char_array(char **c);
 double sum_array(int n, double *x);
 
 /* I/O routines */
-void read_int(int argc, char** argv, const char arg[], int* value, int *err);
-void read_double(int argc, char** argv, char arg[], double* value,int *err);
-void read_string(int argc, char** argv, char arg[], char* value,int *err);
+void read_int   (int argc, char** argv, const char arg[], int* value, int *err);
+void read_double(int argc, char** argv, const char arg[], double* value,int *err);
+void read_string(int argc, char** argv, const char arg[], char* value,int *err);
 
 
 void read_loglevel(int argc, char** argv);
@@ -54,7 +54,7 @@ void print_info(const char* format, ... );
 void print_debug(const char* format, ... );
 
 /* Miscellaneous */
-void set_rank();
+void set_rank(int my_rank);
 double random_number();
 void random_seed();
 int pow2(int p);

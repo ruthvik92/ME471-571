@@ -1,6 +1,8 @@
 #ifndef CUDA_UTIL_H
 #define CUDA_UTIL_H
 
+#include <stdio.h>
+
 #define CHECK(call)                                                          \
 {                                                                            \
     const cudaError_t error = call;                                          \
