@@ -10,7 +10,7 @@ objs = ${SRC}/demo_util.c
 
 CFLAGS=-O2
 
-.PHONY: device_info sm host blockdim warpdiv
+.PHONY: device_info sm host blockdim warpdiv image_test
 
 device_info: device_info.cu ${objs}
 	${NVC} -o device_info  ${INCLUDE_DIR} device_info.cu ${objs} -lm
@@ -26,3 +26,6 @@ host: host.cu ${objs}
 
 warpdiv: warpdiv.cu ${objs}
 	${NVC} -o warpdiv  ${INCLUDE_DIR} warpdiv.cu ${objs} -lm
+
+image_test: image_test.cu ${objs}
+	${NVC} -o image_test  ${INCLUDE_DIR} image_test.cu ${objs} -lm

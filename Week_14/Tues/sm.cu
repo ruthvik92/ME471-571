@@ -35,8 +35,7 @@ __global__ void worker(float *t,uint *s)
 {
     int id = blockIdx.x;
     s[id] = get_smid();
-    sleep(t[id]);
-    // __syncthreads();
+    sleep(t[id]);    
 }
 
 #define blocks_per_MP 32     /* for Kepler */
@@ -48,7 +47,8 @@ int main(int argc, char** argv)
 
     uint  *sm_id, *dev_sm_id;
     float *t, *dev_t; 
-    int *blocks_per_SM;
+    int *blocks_per_SM; 
+    float *time_per_SM;
     int i, mp, N, M;
     double etime, start;
     double scale_factor;
@@ -95,7 +95,14 @@ int main(int argc, char** argv)
 
     /* thread work */
     for(i = 0; i < N; i++)
-        t[i] = 1.0/scale_factor;
+        if (i % (32*32) == 0)
+        {
+            t[i] = 1.0/scale_factor;            
+        }
+        else
+        {
+            t[i] = 0.5/scale_factor;
+        }
 
     cudaMemcpy(dev_t, t, N*sizeof(float), cudaMemcpyHostToDevice);
 
@@ -114,15 +121,20 @@ int main(int argc, char** argv)
     cudaMemcpy(sm_id, dev_sm_id, N*sizeof(uint), cudaMemcpyDeviceToHost);
 
     /* Post process data */
-    blocks_per_SM = (int*) malloc(mp*sizeof(float));
+    blocks_per_SM = (int*) malloc(mp*sizeof(int));
+    time_per_SM = (float*) malloc(mp*sizeof(float));
     printf("Device has %d SMs\n",mp);
 
     for(i = 0; i < mp; i++)
+    {
         blocks_per_SM[i] = 0;
+        time_per_SM[i] = 0;
+    }
 
     printf("Distribution of blocks on SMs\n");
     printf("------------------------------------------------------------------------------\n");
     int prt = N <= (1 << 11);
+    prt = 0;
     int j, k = 0;
     for(i = 0; i < (N+mp-1)/mp; i++)
     {
@@ -137,6 +149,7 @@ int main(int argc, char** argv)
                 printf("(%3d,%2d)  ",k,sm_id[k]);                
             }
             blocks_per_SM[sm_id[k]] += 1;
+            time_per_SM[sm_id[k]] += scale_factor*t[k];
             k++;            
             if (k == N)
                 break;
@@ -145,17 +158,20 @@ int main(int argc, char** argv)
         {
             printf("\n");
         }
-    }
+    }    
     printf("------------------------------------------------------------------------------\n");
     printf("\n");
     printf("Blocks per SM\n");
     printf("---------------------\n");
     for(i = 0; i < mp; i++)
     {
-        printf("SM[%2d] = %6d\n",i,blocks_per_SM[i]);
+        int bsSM = blocks_per_SM[i];
+        printf("SM[%2d] = %10d %10d %10.2f\n",
+               i,bsSM, bsSM/32, time_per_SM[i]);
     }
     printf("---------------------\n");
     printf("\n");
+
     int total_threads = block.x*grid.x;
     printf("%27s %12d\n", "Threads per block",block.x*block.y);
     printf("%27s %12d\n", "Total number of blocks",grid.x);
