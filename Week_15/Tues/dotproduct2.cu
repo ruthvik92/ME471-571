@@ -10,15 +10,19 @@ double cpuSecond()
     return (double) tp.tv_sec + (double)tp.tv_usec*1e-6;
 }
 
+const int N_def (1 << 20);
+const int threadsPerBlock = 32;
+const int blocksPerGrid = (N_def+threadsPerBlock-1) / threadsPerBlock;
 
-__global__ void dot_cuda(int N, float *a, float *b, float *c) 
+
+__global__ void cuda_dot(int N, double *a, double *b, double *c) 
 {
-    // __shared__ float localDot[threadsPerBlock];  /* Statically defined */
-    extern __shared__ float localDot[];
+    // __shared__ double localDot[threadsPerBlock];  /* Statically defined */
+    extern __shared__ double localDot[];
     int ix = threadIdx.x + blockIdx.x * blockDim.x;
     int localIndex = threadIdx.x;
 
-    float localSum = 0;
+    double localSum = 0;
     while (ix < N) {
         localSum += a[ix] * b[ix];
         ix += blockDim.x * gridDim.x;
@@ -46,49 +50,39 @@ __global__ void dot_cuda(int N, float *a, float *b, float *c)
         c[blockIdx.x] = localDot[0];
 }
 
-float dot_gpu(int N, float *a, float *b)
+double dot_gpu(int N, double *a, double *b,
+               double *dev_a, double *dev_b, 
+               double *dev_partial_c)
 {
-    float   dot, *partial_c;
-    float   *dev_a, *dev_b, *dev_partial_c;
+    double   dot, *partial_c;
     double start, etime;
 
-    const int threadsPerBlock = 32;
-    const int blocksPerGrid = (N+threadsPerBlock-1) / threadsPerBlock;
-
-    partial_c = (float*) malloc( blocksPerGrid*sizeof(float) );
-
-    /* allocate the memory on the GPU */
-    start = cpuSecond();
-    CHECK(cudaMalloc((void**) &dev_a, N*sizeof(float)));
-    CHECK(cudaMalloc((void**) &dev_b, N*sizeof(float)));
-    CHECK(cudaMalloc((void**) &dev_partial_c, blocksPerGrid*sizeof(float) ) );
-    etime = cpuSecond() - start;
-    printf("%20s %12.4e\n","cudaMalloc",etime);
+    partial_c = (double*) malloc( blocksPerGrid*sizeof(double) );
 
     /* copy the arrays 'a' and 'b' to the GPU */
     start = cpuSecond();
-    CHECK(cudaMemcpy(dev_a, a, N*sizeof(float),
+    CHECK(cudaMemcpy(dev_a, a, N*sizeof(double),
                               cudaMemcpyHostToDevice ) );
-    CHECK(cudaMemcpy(dev_b, b, N*sizeof(float),
+    CHECK(cudaMemcpy(dev_b, b, N*sizeof(double),
                               cudaMemcpyHostToDevice ) ); 
     etime = cpuSecond() - start;
-    printf("%20s %12.4e\n","cudaMemcpy",etime);
+    // printf("%20s %12.4e\n","cudaMemcpy",etime);
 
 
     dim3 block(threadsPerBlock);  /* Values defined in macros */
     dim3 grid(blocksPerGrid);     /* defined in macros, above */
     start = cpuSecond();
-    dot_cuda<<<grid,block,threadsPerBlock*sizeof(float)>>>(N, dev_a, dev_b, 
+    cuda_dot<<<grid,block,threadsPerBlock*sizeof(double)>>>(N, dev_a, dev_b, 
                                                             dev_partial_c );
     cudaDeviceSynchronize();
     etime = cpuSecond() - start;
     CHECK(cudaPeekAtLastError());
-    printf("%20s %12.4e\n","dot_cuda",etime);
+    // printf("%20s %12.4e\n","cuda_dot",etime);
 
 
     /* copy the array 'c' back from the GPU to the CPU */
     CHECK( cudaMemcpy( partial_c, dev_partial_c,
-                      blocksPerGrid*sizeof(float),
+                      blocksPerGrid*sizeof(double),
                       cudaMemcpyDeviceToHost ) );
 
     /* Sum of block sums */
@@ -98,19 +92,15 @@ float dot_gpu(int N, float *a, float *b)
         dot += partial_c[i];
     }
 
-    /* free memory on the gpu side */
-    CHECK(cudaFree(dev_a));
-    CHECK(cudaFree(dev_b));
-    CHECK(cudaFree(dev_partial_c));
-
     free(partial_c);
 
     return dot;
 }
 
-float dot_cpu(int n, float *a, float *b)
+#if 1
+double dot_cpu(int n, double *a, double *b)
 {
-    float sum = 0;
+    double sum = 0;
     int i;
 
     for (i = 0; i < n; i++)
@@ -123,22 +113,28 @@ float dot_cpu(int n, float *a, float *b)
 /* Compute a dot product */
 int main( void ) 
 {
-    float   *a, *b;
-    float c_gpu, c_cpu;
+    double   *a, *b;
+    double *dev_a, *dev_b, *dev_partial_c;
+    double c_gpu, c_cpu;
     int N;
-    double etime, etime1, start;
+    double etime, start;
 
-    N = 1 << 20;
-
-    /* CPU */
-    printf("\n");
-    printf("%20s\n","CPU");
+    N = N_def;
 
     start = cpuSecond();
-    a = (float*) malloc( N*sizeof(float) );
-    b = (float*) malloc( N*sizeof(float) );
-    etime1 = cpuSecond() - start;
-    printf("%20s %12.4e\n","malloc", etime1);
+    a = (double*) malloc( N*sizeof(double) );
+    b = (double*) malloc( N*sizeof(double) );
+    etime = cpuSecond() - start;
+    printf("%20s %12.4e\n","malloc", etime);
+
+
+    /* allocate the memory on the GPU */
+    start = cpuSecond();
+    CHECK(cudaMalloc((void**) &dev_a, N*sizeof(double)));
+    CHECK(cudaMalloc((void**) &dev_b, N*sizeof(double)));
+    CHECK(cudaMalloc((void**) &dev_partial_c, blocksPerGrid*sizeof(double) ) );
+    etime = cpuSecond() - start;
+    printf("%20s %12.4e\n","cudaMalloc",etime);
 
 
     /* Define vectors a and b */
@@ -148,30 +144,40 @@ int main( void )
         b[i] = 1.0;
     }
 
+    /* CPU */
+    printf("\n");
+    printf("%20s\n","CPU");
+
     start = cpuSecond();
     c_cpu = dot_cpu(N,a,b);
     etime = cpuSecond() - start;
-    printf("%20s %12.4e\n","dot_cpu", etime);
-    printf("%20s %12.4e\n","Total CPU (s)", etime + etime1);
+    printf("%20s %12.4e\n","Total CPU (s)", etime);
     printf("\n");
 
     /* GPU */
     printf("%20s\n","GPU");
     start = cpuSecond();
-    c_gpu = dot_gpu(N,a,b);
+    c_gpu = dot_gpu(N,a,b,dev_a,dev_b,dev_partial_c);
     etime = cpuSecond() - start;
     printf("%20s %12.4e\n","Total GPU (s)", etime);
 
     /* Check result */
     printf("\n");
-    // #define sum_squares(x)  (x*(x+1)*(2*x+1)/6.0)
-    // float s = sum_squares((float)(N-1));
+    // #define sum_squares(x)  (x*(x+1)*(2*x+1)/6)
+    // double s = sum_squares((double)(N-1));
 
-    float s = N;   /* Sum of 1s */
+    double s = N;   /* Sum of 1s */
     printf("%20s %10f\n","Dot product (CPU)", c_cpu);
     printf("%20s %10f\n","Dot product (GPU)", c_gpu);
     printf("%20s %10f\n","True dot product", s);
 
+    /* free memory on the gpu side */
+    CHECK(cudaFree(dev_a));
+    CHECK(cudaFree(dev_b));
+    CHECK(cudaFree(dev_partial_c));
+
+
     free(a);
     free(b);
 }
+#endif 
