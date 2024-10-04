@@ -2,11 +2,11 @@
 
 __global__ void add(int *c)
 {
-    int id = blockIdx.x;
+    int id = threadIdx.x;
     c[id] = id;
 }
 
-#define N 10
+#define N 16
 
 int main(void)
 {
@@ -17,7 +17,7 @@ int main(void)
     /* Allocate memory on the device */
     cudaMalloc((void **)&dev_c, N * sizeof(int));
 
-    add<<<N, 1>>>(dev_c); // gridsize is N, blocksize is 1 (1 thread per block)
+    add<<<N, 1>>>(dev_c); // gridsize is 16, blocksize is 1 (1 thread per block)
 
     /* Copy contents of dev_c back to c */
     cudaMemcpy(&c, dev_c, N * sizeof(int), cudaMemcpyDeviceToHost);

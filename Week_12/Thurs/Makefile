@@ -8,8 +8,8 @@ INCLUDE_DIR = -I${me471}/src -I/usr/include
 
 objs = ${SRC}/demo_util.c
 
-.PHONY: hello_demo add_simple add count_devices parallel_simple2 pool
-all: hello_demo add_simple add count_devices parallel_simple2 pool
+.PHONY: hello_demo add_simple add count_devices parallel_simple2 parallel_simple3 arallel_simple pool
+all: hello_demo add_simple add count_devices parallel_simple2 parallel_simple3 arallel_simple pool
 
 
 hello_demo: hello_demo.cu ${objs}
@@ -29,6 +29,10 @@ parallel_simple: parallel_simple.cu ${objs}
 
 parallel_simple2: parallel_simple2.cu ${objs}
 	${NVC} -o parallel_simple2  ${INCLUDE_DIR} parallel_simple2.cu ${objs} -lm
+
+
+parallel_simple3: parallel_simple3.cu ${objs}
+	${NVC} -o parallel_simple3  ${INCLUDE_DIR} parallel_simple3.cu ${objs} -lm
 
 pool: pool.cu ${objs}
 	${NVC} -o pool  ${INCLUDE_DIR} pool.cu ${objs} -lm

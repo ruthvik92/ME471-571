@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-__global__ void add( int *c) 
+__global__ void add(int *c)
 {
     int id = threadIdx.x;
     c[id] = id;
@@ -8,27 +8,24 @@ __global__ void add( int *c)
 
 #define N 16
 
-int main(void) 
+int main(void)
 {
     int c[N];
     int *dev_c;
     int i;
 
     /* Allocate memory on the device */
-    cudaMalloc( (void**)&dev_c, N*sizeof(int));
+    cudaMalloc((void **)&dev_c, N * sizeof(int));
 
-    add<<<1,N>>>(dev_c);
+    add<<<1, N>>>(dev_c); // gridsize is 1, blocksize is N (N thread per block)
 
     /* Copy contents of dev_c back to c */
-    cudaMemcpy( &c, dev_c, N*sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&c, dev_c, N * sizeof(int), cudaMemcpyDeviceToHost);
 
-    for(i = 0; i < N; i++)
+    for (i = 0; i < N; i++)
     {
-        printf( "c[%d] = %d\n",i,c[i]);
+        printf("c[%d] = %d\n", i, c[i]);
     }
 
     cudaFree(dev_c);
-
 }
-
-
