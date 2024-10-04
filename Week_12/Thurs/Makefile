@@ -1,7 +1,7 @@
 CC = gcc
 NVC = nvcc
 
-me471 = ${HOME}/ME471-571-master
+me471 = ${HOME}/ME471-571
 
 SRC = ${me471}/src
 INCLUDE_DIR = -I${me471}/src -I/usr/include
@@ -9,6 +9,8 @@ INCLUDE_DIR = -I${me471}/src -I/usr/include
 objs = ${SRC}/demo_util.c
 
 .PHONY: hello_demo add_simple add count_devices parallel_simple2 pool
+all: hello_demo add_simple add count_devices parallel_simple2 pool
+
 
 hello_demo: hello_demo.cu ${objs}
 	${NVC} -o hello_demo  ${INCLUDE_DIR} hello_demo.cu ${objs} -lm
@@ -30,3 +32,7 @@ parallel_simple2: parallel_simple2.cu ${objs}
 
 pool: pool.cu ${objs}
 	${NVC} -o pool  ${INCLUDE_DIR} pool.cu ${objs} -lm
+
+
+# make all, to make all
+# make <a_phony> to make one phony
