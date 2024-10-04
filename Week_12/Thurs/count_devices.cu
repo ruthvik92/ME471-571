@@ -8,6 +8,11 @@ int main( void )
     char str[4];
     cudaGetDeviceCount( &count);
 
+    if (count == 0)
+    {
+        printf("No CUDA capable devices found.\n");
+    }
+
     for (int i = 0; i < count; i++) 
     {
         cudaGetDeviceProperties( &prop, i);
@@ -22,9 +27,9 @@ int main( void )
 
 
         printf("   --- Memory Information for device %d ---\n", i );
-        printf("Total global mem      :  %14.1f (bytes)\n", (double) prop.totalGlobalMem );
-        printf("Total global mem      :  %14.1f (kb)\n", prop.totalGlobalMem/1024.0);
-        printf("Total global mem      :  %14.1f (mb)\n", prop.totalGlobalMem/(1024.0*1024.0));
+        //printf("Total global mem      :  %14.1f (bytes)\n", (double) prop.totalGlobalMem );
+        //printf("Total global mem      :  %14.1f (kb)\n", prop.totalGlobalMem/1024.0);
+        //printf("Total global mem      :  %14.1f (mb)\n", prop.totalGlobalMem/(1024.0*1024.0));
         printf("Total global mem      :  %14.1f (gb)\n",  prop.totalGlobalMem/(1024.0*1024.0*1024.0));
         printf("\n");
 
