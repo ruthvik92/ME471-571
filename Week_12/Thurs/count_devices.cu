@@ -2,52 +2,52 @@
 
 int main(void)
 {
-    cudaDeviceProp prop;
+       cudaDeviceProp prop;
 
-    int count;
-    char str[4];
-    cudaGetDeviceCount(&count);
+       int count;
+       char str[4];
+       cudaGetDeviceCount(&count);
 
-    if (count == 0)
-    {
-        printf("No CUDA capable devices found.\n");
-    }
+       if (count == 0)
+       {
+              printf("No CUDA capable devices found.\n");
+       }
 
-    for (int i = 0; i < count; i++)
-    {
-        cudaGetDeviceProperties(&prop, i);
+       for (int i = 0; i < count; i++)
+       {
+              cudaGetDeviceProperties(&prop, i);
 
-        printf("   --- General Information for device %d ---\n", i);
-        printf("Name:  %s\n", prop.name);
-        printf("\n");
-        sprintf(str, "%d.%d", prop.major, prop.minor);
-        printf("Compute capability    :  %14s\n", str);
-        printf("Clock rate            :  %14.2f (GHz)\n", prop.clockRate / 1000000.0);
-        printf("\n");
+              printf("   --- General Information for device %d ---\n", i);
+              printf("Name:  %s\n", prop.name);
+              printf("\n");
+              sprintf(str, "%d.%d", prop.major, prop.minor);
+              printf("Compute capability    :  %14s\n", str);
+              printf("Clock rate            :  %14.2f (GHz)\n", prop.clockRate / 1000000.0);
+              printf("\n");
 
-        printf("   --- Memory Information for device %d ---\n", i);
-        // printf("Total global mem      :  %14.1f (bytes)\n", (double) prop.totalGlobalMem );
-        // printf("Total global mem      :  %14.1f (kb)\n", prop.totalGlobalMem/1024.0);
-        // printf("Total global mem      :  %14.1f (mb)\n", prop.totalGlobalMem/(1024.0*1024.0));
-        printf("Total global mem      :  %14.1f (gb)\n", prop.totalGlobalMem / (1024.0 * 1024.0 * 1024.0));
-        printf("\n");
+              printf("   --- Memory Information for device %d ---\n", i);
+              // printf("Total global mem      :  %14.1f (bytes)\n", (double) prop.totalGlobalMem );
+              // printf("Total global mem      :  %14.1f (kb)\n", prop.totalGlobalMem/1024.0);
+              // printf("Total global mem      :  %14.1f (mb)\n", prop.totalGlobalMem/(1024.0*1024.0));
+              printf("Total global mem      :  %14.1f (gb)\n", prop.totalGlobalMem / (1024.0 * 1024.0 * 1024.0));
+              printf("\n");
 
-        printf("   --- MP Information for device %d ---\n", i);
-        printf("Multiprocessor count :  %14d\n",
-               prop.multiProcessorCount);
-        printf("Shared mem per mp     :  %14.1f (kb)\n", prop.sharedMemPerBlock / 1024.);
-        printf("Registers per mp      :  %14.1f (kb)\n", prop.regsPerBlock / 1024.);
-        printf("Threads in warp       :  %14d\n", prop.warpSize);
-        printf("Max threads per block :  %14d\n",
-               prop.maxThreadsPerBlock);
-        printf("Max thread dimensions:  (%d, %d, %d)\n",
-               prop.maxThreadsDim[0], prop.maxThreadsDim[1],
-               prop.maxThreadsDim[2]);
-        printf("Max grid dimensions  :  %d, %d, %d\n",
-               prop.maxGridSize[0], prop.maxGridSize[1],
-               prop.maxGridSize[2]);
-        printf("\n");
-    }
+              printf("   --- MP Information for device %d ---\n", i);
+              printf("Multiprocessor count :  %14d\n",
+                     prop.multiProcessorCount);
+              printf("Shared mem per mp     :  %14.1f (kb)\n", prop.sharedMemPerBlock / 1024.);
+              printf("Registers per mp      :  %14.1f (kb)\n", prop.regsPerBlock / 1024.);
+              printf("Threads in warp       :  %14d\n", prop.warpSize);
+              printf("Max threads per block :  %14d\n",
+                     prop.maxThreadsPerBlock);
+              printf("Max thread dimensions:  (%d, %d, %d)\n",
+                     prop.maxThreadsDim[0], prop.maxThreadsDim[1],
+                     prop.maxThreadsDim[2]);
+              printf("Max grid dimensions  :  %d, %d, %d\n",
+                     prop.maxGridSize[0], prop.maxGridSize[1],
+                     prop.maxGridSize[2]);
+              printf("\n");
+       }
 }
 
 // ###############################################
@@ -71,3 +71,21 @@ int main(void)
 //        16 x 16 x 4 (a 3D block)
 //
 //    All these examples respect the total limit of 1024 threads per block.
+
+//  --- General Information for device 0 ---
+// Name:  NVIDIA RTX A5500 Laptop GPU
+//
+// Compute capability    :             8.6
+// Clock rate            :            1.50 (GHz)
+//
+//   --- Memory Information for device 0 ---
+// Total global mem      :            15.7 (gb)
+//
+//   --- MP Information for device 0 ---
+// Multiprocessor count :              58
+// Shared mem per mp     :            48.0 (kb)
+// Registers per mp      :            64.0 (kb)
+// Threads in warp       :              32
+// Max threads per block :            1024
+// Max thread dimensions:  (1024, 1024, 64)
+// Max grid dimensions  :  2147483647, 65535, 65535
