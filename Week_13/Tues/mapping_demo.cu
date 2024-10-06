@@ -8,7 +8,7 @@ __global__ void addmat(int m, int n, int *A, int *B, int *C)
     /* Each thread processes one element */
     unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int iy = threadIdx.y + blockIdx.y * blockDim.y;
-    int idx = iy * m + ix;
+    int idx = iy * m + ix; // try switching iy and ix, time taken will be 10x more
     if (ix < m && iy < n)
         C[idx] = A[idx] + B[idx];
 }
@@ -23,6 +23,16 @@ void addmat_host(int m, int n, int *A, int *B, int *C)
             C[idx] = A[idx] + B[idx];
         }
 }
+// Memory Layout: [A[0,0], A[0,1], A[0,2], ..., A[1,0], A[1,1], ..., A[m-1,n-1]]
+// dev_A, dev_B are 1D row-major arrays, to minimize the overall read time they must be accessed only in a row-major manner.
+// ix, iy indicate thread's position in the row of 2D grid of threads, iy indicates thread's position in the columns.
+// For the scenario, idx=iy*m+ix all the threads in the warp (32) will likely have consecutive ix values which means
+// they access consecutive elements in the memory. This leads to coalesced memory access for the whole warp as shown below.
+// Thread 0: A[iy, 0], Thread 1: A[iy, 1], Thread 2: A[iy, 2], ... (coalesced)
+
+// For the scenario, idx = ix*m + iy each thread must access elements from different rows but single columns. This leads
+// to strided access.
+// Thread 0: A[0,iy], Thread 1: A[1,iy], Thread 2: A[2,iy], ... (non-coalesced, strided)
 
 double cpuSecond()
 {
@@ -55,6 +65,10 @@ int main(int argc, char **argv)
     int err1, err2;
     read_int(argc, argv, "--dimx", &dimx, &err1);
     read_int(argc, argv, "--dimy", &dimy, &err2);
+    // ncu ./mapping_demo --dimx 25 --dimy 21 --host 1 (for profiling)
+    // ncu ./mapping_demo --dimx 2 --dimy 64 --host 1
+    // sudo nano /etc/modprobe.d/nvidia.conf
+    // options nvidia NVreg_RestrictProfilingToAdminUsers=0
 
     if (err1 > 0 || err2 > 0)
     {
